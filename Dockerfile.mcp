@@ -1,0 +1,24 @@
+# MCP Proxy container: Python proxy + official MongoDB MCP Server (Node.js)
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install Node.js for MongoDB MCP Server
+RUN apt-get update && apt-get install -y curl && \
+    curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+    apt-get install -y nodejs && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install MongoDB MCP Server globally
+RUN npm install -g @mongodb-js/mongodb-mcp-server
+
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY . .
+
+# Container is kept alive via docker-compose; VS Code uses `docker exec`
+# to launch mcp_proxy_server.py over stdio.
+CMD ["tail", "-f", "/dev/null"]
